@@ -3,8 +3,8 @@ import string
 import math
 
 def compute_letter_freq(target_string):
-    alphabet = list(string.ascii_lowercase)
-    target_string = target_string.lower()
+    alphabet = list(string.printable)
+#    target_string = target_string.lower()
 
     per_letter_cnt = {}
     total = 0
@@ -30,13 +30,13 @@ def xor_single_byte(target_bytes, key):
 
 def decrypt(target_bytes, key):
     decrypted_target_bytes = xor_single_byte(target_bytes, key)
-    decrypted_string = decrypted_target_bytes.decode("ascii")
+    decrypted_string = decrypted_target_bytes.decode("utf-8")
         
     return decrypted_string
 
 def compute_loss(target_frequency, reference_frequency):
     loss = 0
-    for letter in list(string.ascii_lowercase): 
+    for letter in list(string.printable): 
         loss += abs(target_frequency[letter] - reference_frequency[letter])
 
     return loss
@@ -50,17 +50,17 @@ def compute_likely_key(target_hex, reference_frequency):
     for key in range(256):
         try:
             decrypted_target = decrypt(bytes.fromhex(target_hex), key)
+            
         except UnicodeDecodeError:
             continue
         target_frequency = compute_letter_freq(decrypted_target)
         loss = compute_loss(target_frequency, reference_frequency)
-        
+
         if loss < cur_best_loss:
             cur_best_loss = loss 
             cur_best_key = key
 
     return cur_best_key, cur_best_loss
-
 
 def crack_single_byte_cipher(target_hex, sample_text_path):
     with open(sample_text_path, "r") as t:

@@ -17,8 +17,6 @@ def find_minimum_loss_with_single_byte_key(target_list, reference_frequency):
                 , key
             )
 
-            print(target, target_list[cur_best_idx], key, cur_best_decrypt)
-
     return target_list[cur_best_idx], cur_best_decrypt, cur_best_loss
 
 
