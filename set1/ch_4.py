@@ -8,7 +8,7 @@ def find_minimum_loss_with_single_byte_key(target_list, reference_frequency):
     cur_best_decrypt = ""
 
     for idx, target in enumerate(target_list):
-        key, loss = sbk.compute_likely_key(target, reference_frequency)
+        key, loss = sbk.compute_likely_key(bytes.fromhex(target), reference_frequency)
         if loss < cur_best_loss:
             cur_best_loss = loss 
             cur_best_idx = idx

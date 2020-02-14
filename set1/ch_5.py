@@ -13,6 +13,8 @@ def encrypt_with_repeating_xor(target, key):
     encrypted_text = repeating_xor(target.encode("utf-8"), key.encode("utf-8")).hex()
     print("Encrypted text: {}".format(encrypted_text))
 
+    return encrypted_text
+
 if __name__=="__main__":
     plaintext = "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal"
     key = "ICE"

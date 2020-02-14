@@ -41,15 +41,13 @@ def compute_loss(target_frequency, reference_frequency):
 
     return loss
 
-def compute_likely_key(target_hex, reference_frequency):
-    target_bytes = bytes.fromhex(target_hex)
-
+def compute_likely_key(target, reference_frequency):
     cur_best_loss = math.inf
     cur_best_key = -1
 
     for key in range(256):
         try:
-            decrypted_target = decrypt(bytes.fromhex(target_hex), key)
+            decrypted_target = decrypt(target, key)
             
         except UnicodeDecodeError:
             continue
@@ -68,7 +66,7 @@ def crack_single_byte_cipher(target_hex, sample_text_path):
 
     reference_frequency = compute_letter_freq(sample_text)
 
-    most_likely_key, most_likely_loss = compute_likely_key(target_hex, reference_frequency)
+    most_likely_key, most_likely_loss = compute_likely_key(bytes.fromhex(target_hex), reference_frequency)
 
     print("Target hex: {}".format(target_hex))
     print("Most likely key: {}".format(most_likely_key))
