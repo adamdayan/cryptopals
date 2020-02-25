@@ -6,6 +6,8 @@ from ch_5 import repeating_xor, encrypt_with_repeating_xor
 from ch_3 import compute_likely_key, compute_letter_freq
 from itertools import combinations
 
+import checker_6 as c
+
 def compute_hamming_distance(t1, t2):
     hamming_distance = 0
     #iterate through each byte, convert it into a byte string and compare each bit in the byte string
@@ -94,10 +96,12 @@ if __name__=="__main__":
     plaintext = "When Babbage showed that Thwaites' cipher was essentially just another recreation of the Vigenere cipher, Thwaites presented a challenge to Babbage: given an original text (from Shakespeare's The Tempest : Act 1, Scene 2) and its enciphered version, he was to find the key words that Thwaites had used to encipher the original text. " 
     key = "Ice"
     test_ciphertext = repeating_xor(plaintext.encode("ascii"), key.encode("ascii"))
+    check_ciphertext = c.repeating_key_xor(plaintext, key)
+    print(test_ciphertext == check_ciphertext.encode("ascii")) 
 
-    key_sizes = find_most_likely_key_sizes(plaintext.encode("ascii"))
-    print(test_ciphertext)
-    print(key_sizes)
+    #key_sizes = find_most_likely_key_sizes(plaintext.encode("ascii"))
+    #print(test_ciphertext)
+    #print(key_sizes)
     #key = recover_most_likely_key(test_ciphertext, key_sizes[0], reference_frequency)
 
     #print(key_sizes, key)
