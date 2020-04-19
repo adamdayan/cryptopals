@@ -1,107 +1,123 @@
 import sys
 import math
-import base64
-from operator import itemgetter
-from ch_5 import repeating_xor, encrypt_with_repeating_xor
-from ch_3 import compute_likely_key, compute_letter_freq
-from itertools import combinations
+from operator import itemgetter 
+from random import randint
+from base64 import b64decode
 
-import checker_6 as c
+from ch_5 import encrypt_with_repeating_xor
+from ch_3 import decrypt, compute_likely_key, compute_letter_freq 
 
-def compute_hamming_distance(t1, t2):
-    hamming_distance = 0
-    #iterate through each byte, convert it into a byte string and compare each bit in the byte string
-    for t1_byte, t2_byte in zip(t1, t2):
-        t1_bits = format(t1_byte, "08b")
-        t2_bits = format(t2_byte, "08b")
-        pre_hamming_distance = hamming_distance
-        for t1_bit, t2_bit in zip(t1_bits, t2_bits):
-            if t1_bit != t2_bit:
-                hamming_distance += 1
 
-    return hamming_distance
+def compute_hamming_distance(byte_arr_1, byte_arr_2):
+    total_hamming_distance = 0
 
-def find_most_likely_key_sizes(target):
-    all_hamming_distances = []
+    for byte_1, byte_2 in zip(byte_arr_1, byte_arr_2):
+        xor_result = byte_1 ^ byte_2
+        xor_result_bin_string = "{0:b}".format(xor_result)
+        cur_hamming_distance = 0
+        for bit in xor_result_bin_string:
+            cur_hamming_distance += int(bit)
+
+        total_hamming_distance += cur_hamming_distance
+ 
+    return total_hamming_distance
+
+def compute_key_size(target_bytearr):
+    result_list = []
     for key_size in range(2, 41):
-        if key_size > len(target) / 2:
-            break 
-        
-        all_chunks = split_into_key_size(target, key_size)
-        paired_chunks = list(combinations(all_chunks, 2))
-        hamming_distance = 0
-        for p1, p2 in paired_chunks:
-            hamming_distance += compute_hamming_distance(p1, p2)/key_size
-        
-        this_hamming_distance = {
-            "key_size" : key_size, 
-            "normalised_hamming_distance" : hamming_distance / len(paired_chunks)         
+        if key_size * 2 > len(target_bytearr):
+            break
+
+        split_target = split_into_key_size(target_bytearr, key_size)
+        cur_total_hamming_distance = 0
+        cnt_samples = 10000 # sample randomly from split targets this many times
+        for i in range(cnt_samples):
+            cur_total_hamming_distance += compute_hamming_distance(
+                split_target[randint(0, len(split_target) - 1)]
+                , split_target[randint(0, len(split_target) - 1)]
+            )
+
+
+        average_hamming_distance = cur_total_hamming_distance / cnt_samples 
+        normalised_average_hamming_distance = average_hamming_distance / key_size
+    
+        result_dict = {
+            "key_size" : key_size,
+            "total_hamming_distance" : cur_total_hamming_distance, 
+            "average_hamming_distance" : average_hamming_distance, 
+            "normalised_average_hamming_distance" : normalised_average_hamming_distance
         }
-        all_hamming_distances.append(this_hamming_distance)
+        result_list.append(result_dict)
+    
+    result_list.sort(key=itemgetter("normalised_average_hamming_distance"))
+    return [result_dict["key_size"] for result_dict in result_list[:4]]
 
-    all_hamming_distances.sort(key=itemgetter("normalised_hamming_distance"))
-    return [hamming_distance["key_size"] for hamming_distance in all_hamming_distances[:4]]
-
-def split_into_key_size(target, key_size):
+def split_into_key_size(target_bytearr, key_size):
     all_chunks = []
-    for i in range(0, len(target), key_size):
-        chunk = target[i:min(len(target), i + key_size)]
-        all_chunks.append(chunk)
+    for i in range(0, len(target_bytearr), key_size):
+        if i + key_size > len(target_bytearr):
+            break
+        all_chunks.append(target_bytearr[i:i+key_size])
 
     return all_chunks
 
-def transpose_chunks(all_chunks, key_size):
+def transpose_chunks(all_chunks, transpose_num):
     all_transposed_chunks = []
-
-    for i in range(key_size):
+    
+    for cnt in range(transpose_num):
         transposed_chunk = []
         for chunk in all_chunks:
-            if i < len(chunk):
-                transposed_chunk.append(chunk[i])
-        all_transposed_chunks.append(transposed_chunk)
+            transposed_chunk.append(chunk[cnt])
 
+        all_transposed_chunks.append(transposed_chunk)
+        
     return all_transposed_chunks
 
-def recover_most_likely_key(target, key_size, reference_frequency):
-    all_chunks = split_into_key_size(target, key_size)
-    all_transposed_chunks = transpose_chunks(all_chunks, key_size)
-
-    key = bytearray(key_size)
-    for idx, transposed_chunk in enumerate(all_transposed_chunks):
-        key[idx] = compute_likely_key(transposed_chunk, reference_frequency)[0]
-
-    return key
-            
-if __name__=="__main__":
-    """ 
-    thd = compute_hamming_distance("this is a test".encode("ascii"), "wokka wokka!!!".encode("ascii"))
-    print(thd) 
-
-    with open("data_ch_6.txt", "r") as t:
-        cipher_text = t.read()
-
-    #print(cipher_text)
-    cipher_text_bytes = base64.b64decode(cipher_text)
-
-    most_likely_key_sizes = find_most_likely_key_sizes(cipher_text_bytes)
-    #print(most_likely_key_sizes)
+def find_key(target_bytearr, key_size, reference_frequency):
+    split_target_chunks = split_into_key_size(target_bytearr, key_size)
+    transposed_target_chunks= transpose_chunks(split_target_chunks, key_size)
     
-    with open("sample_text.txt", "r") as t:
+    key = bytes()
+    loss = 0 
+    for chunk in transposed_target_chunks:
+        most_likely_key, most_likely_loss = compute_likely_key(chunk, reference_frequency)
+        key+=bytes([most_likely_key])
+        loss+=most_likely_loss
+
+    print("MLK: ", key)
+    avg_loss = loss/len(key)
+    return avg_loss, key
+
+def compute_most_likely_key(target_bytearr, sample_text_path):
+    with open(sample_text_path, "r") as t:
         sample_text = t.read()
-
     reference_frequency = compute_letter_freq(sample_text)
-    """
 
-    #plaintext = "Burning 'em, if you ain't quick and nimble\nI go crazy when I hear a cymbal"
-    plaintext = "When Babbage showed that Thwaites' cipher was essentially just another recreation of the Vigenere cipher, Thwaites presented a challenge to Babbage: given an original text (from Shakespeare's The Tempest : Act 1, Scene 2) and its enciphered version, he was to find the key words that Thwaites had used to encipher the original text. " 
-    key = "Ice"
-    test_ciphertext = repeating_xor(plaintext.encode("ascii"), key.encode("ascii"))
-    check_ciphertext = c.repeating_key_xor(plaintext, key)
-    print(test_ciphertext == check_ciphertext.encode("ascii")) 
+    most_likely_key_sizes = compute_key_size(target_bytearr)
+    most_likely_key_sizes = [most_likely_key_sizes[0]]
+    print("MLK Size", most_likely_key_sizes)
+    cur_lowest_loss = math.inf
+    for key_size in most_likely_key_sizes:
+        loss, key = find_key(target_bytearr, key_size, reference_frequency)
+        if loss < cur_lowest_loss:
+            cur_lowest_loss = loss
+            cur_best_key = key
 
-    #key_sizes = find_most_likely_key_sizes(plaintext.encode("ascii"))
-    #print(test_ciphertext)
-    #print(key_sizes)
-    #key = recover_most_likely_key(test_ciphertext, key_sizes[0], reference_frequency)
 
-    #print(key_sizes, key)
+    return cur_best_key
+
+
+if __name__=="__main__":
+
+    with open('data_ch_6.txt') as f:
+        ciphertext_bytearr = b64decode(''.join(f.read().strip().split('\n')))
+
+    key = compute_most_likely_key(ciphertext_bytearr, "sample_text.txt")
+
+    plaintext = decrypt(ciphertext_bytearr, key)
+
+    print("Key: {}".format(key), "plaintext: {}".format(plaintext))
+
+     
+    
+

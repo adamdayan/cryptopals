@@ -2,13 +2,14 @@ import sys
 import string
 import math
 
+from ch_5 import repeating_xor
+
 def compute_letter_freq(target_string):
     alphabet = list(string.printable)
 #    target_string = target_string.lower()
 
     per_letter_cnt = {}
-    total = 0
-
+    total = 0 
     for letter in alphabet: 
         cnt = target_string.count(letter)
         per_letter_cnt[letter] = cnt
@@ -25,11 +26,11 @@ def compute_letter_freq(target_string):
 
     return per_letter_frequency
 
-def xor_single_byte(target_bytes, key):
-    return bytearray([targ ^ key for targ in target_bytes])
+def xor_bytes(target_bytes, key):
+    return bytearray([targ ^ key[cnt % len(key)] for cnt, targ in enumerate(target_bytes)])
 
 def decrypt(target_bytes, key):
-    decrypted_target_bytes = xor_single_byte(target_bytes, key)
+    decrypted_target_bytes = xor_bytes(target_bytes, key)
     decrypted_string = decrypted_target_bytes.decode("utf-8")
         
     return decrypted_string
@@ -47,7 +48,7 @@ def compute_likely_key(target, reference_frequency):
 
     for key in range(256):
         try:
-            decrypted_target = decrypt(target, key)
+            decrypted_target = decrypt(target, bytes([key]))
             
         except UnicodeDecodeError:
             continue
@@ -71,8 +72,7 @@ def crack_single_byte_cipher(target_hex, sample_text_path):
     print("Target hex: {}".format(target_hex))
     print("Most likely key: {}".format(most_likely_key))
     print("Resulting decrypt: {}".format(decrypt(bytes.fromhex(target_hex), most_likely_key)))
-
-
+    
 if __name__=="__main__":     
     intercept = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"
     crack_single_byte_cipher(intercept, "sample_text.txt")
