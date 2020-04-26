@@ -84,7 +84,6 @@ def find_key(target_bytearr, key_size, reference_frequency):
         key+=bytes([most_likely_key])
         loss+=most_likely_loss
 
-    print("MLK: ", key)
     avg_loss = loss/len(key)
     return avg_loss, key
 
@@ -94,8 +93,6 @@ def compute_most_likely_key(target_bytearr, sample_text_path):
     reference_frequency = compute_letter_freq(sample_text)
 
     most_likely_key_sizes = compute_key_size(target_bytearr)
-    most_likely_key_sizes = [most_likely_key_sizes[0]]
-    print("MLK Size", most_likely_key_sizes)
     cur_lowest_loss = math.inf
     for key_size in most_likely_key_sizes:
         loss, key = find_key(target_bytearr, key_size, reference_frequency)
