@@ -2,7 +2,7 @@ import sys
 import string
 import math
 
-from ch_5 import repeating_xor
+from set1.ch_5 import repeating_xor
 
 def compute_letter_freq(target_string):
     alphabet = list(string.printable)
@@ -26,7 +26,10 @@ def compute_letter_freq(target_string):
 
     return per_letter_frequency
 
-def xor_bytes(target_bytes, key):
+def xor_bytes(target_bytes, key, pad = False):
+    if pad:
+        num_missing_bytes = len(key) - (len(target_bytes) % len(key))
+        target_bytes+= bytearray(num_missing_bytes)
     return bytearray([targ ^ key[cnt % len(key)] for cnt, targ in enumerate(target_bytes)])
 
 def decrypt(target_bytes, key):

@@ -1,6 +1,6 @@
 import string
 import math
-import ch_3 as sbk
+import set1.ch_3 as sbk
 
 def find_minimum_loss_with_single_byte_key(target_list, reference_frequency):
     cur_best_loss = math.inf

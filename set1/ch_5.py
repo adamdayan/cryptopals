@@ -1,4 +1,4 @@
-from ch_2 import xor
+from set1.ch_2 import xor
 
 
 def repeating_xor(target, key):

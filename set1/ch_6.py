@@ -4,8 +4,8 @@ from operator import itemgetter
 from random import randint
 from base64 import b64decode
 
-from ch_5 import encrypt_with_repeating_xor
-from ch_3 import decrypt, compute_likely_key, compute_letter_freq 
+from set1.ch_5 import encrypt_with_repeating_xor
+from set1.ch_3 import decrypt, compute_likely_key, compute_letter_freq 
 
 
 def compute_hamming_distance(byte_arr_1, byte_arr_2):
