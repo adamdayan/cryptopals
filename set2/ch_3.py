@@ -29,7 +29,7 @@ def encrypt_ecb_cbc(target_bytearr, is_ecb):
         iv = bytearray([random.randint(0, 255) for k in range(len(key))])
         ciphertext_bytearr = encrypt_cbc(bytes(padded_target_bytearr), iv, bytes(key))
 
-    return unpadder(ciphertext_bytearr)
+    return ciphertext_bytearr
 
 
 def identify_ecb(is_ecb):
