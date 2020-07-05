@@ -1,6 +1,4 @@
 def padder(target_bytearray, block_size):
-    if len(target_bytearray) == block_size:
-        return target_bytearray
     num_missing_bytes = block_size - (len(target_bytearray) % block_size)
     missing_bytes = bytearray([num_missing_bytes]) * num_missing_bytes
     return target_bytearray + missing_bytes

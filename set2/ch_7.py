@@ -1,9 +1,15 @@
+class InvalidPaddingException(Exception):
+    pass
+
+
 def unpadder(padded_bytearr):
     potential_padding_len = padded_bytearr[-1]
+    if potential_padding_len == 0:
+        raise InvalidPaddingException("Zero byte is not valid in PKCS#7")
 
     for i in reversed(range(len(padded_bytearr) - potential_padding_len, len(padded_bytearr), 1)):
         if padded_bytearr[i] != potential_padding_len:
-            raise Exception("Invalid padding!")
+            raise InvalidPaddingException("Invalid padding: {}".format(padded_bytearr))
 
     return padded_bytearr[:-potential_padding_len]
 
