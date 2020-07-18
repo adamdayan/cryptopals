@@ -5,16 +5,17 @@ import math
 from set1.ch_5 import repeating_xor
 
 def compute_letter_freq(target_string):
-    alphabet = list(string.printable)
+#    alphabet = list(string.printable)
 #    target_string = target_string.lower()
 
     per_letter_cnt = {}
     total = 0 
-    for letter in alphabet: 
+    for b in range(128): 
+        letter = chr(b)
         cnt = target_string.count(letter)
         per_letter_cnt[letter] = cnt
         total += cnt
-
+    
     if total > 0: 
         per_letter_frequency = {
             letter : float(cnt) / float(total) for letter, cnt in per_letter_cnt.items()
@@ -40,7 +41,8 @@ def decrypt(target_bytes, key):
 
 def compute_loss(target_frequency, reference_frequency):
     loss = 0
-    for letter in list(string.printable): 
+    for b in range(128):
+        letter = chr(b)
         loss += abs(target_frequency[letter] - reference_frequency[letter])
 
     return loss
