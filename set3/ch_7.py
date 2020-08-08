@@ -3,9 +3,7 @@ import math
 from ch_5 import MersenneTwister
 
 def invert_right(a, shift):
-    print("inside", "a", a, "shift", shift)
     c = a >> shift
-    print("c", c)
     b = a ^ c
 
     return b
@@ -19,7 +17,6 @@ def invert_right(a, shift):
             b = (a >> max(remaining, 0)) ^ (b >> abs(remaining))
         else :
             b = (a >> max(remaining, 0)) ^ b
-        print(b)
 
     return b
     
@@ -45,9 +42,7 @@ def invert_output(output):
     y = invert_right(output, l)
     y = invert_left(y, t, c)
     y = invert_left(y, s, b)
-    print("first", y)
     y = invert_right(y, u) 
-    print("num", y, u)
     return y
 
 def total_mt_tap(seed):
