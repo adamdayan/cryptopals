@@ -1,17 +1,28 @@
+import math 
+
 from ch_5 import MersenneTwister
 
 def invert_right(a, shift):
+    print("inside", "a", a, "shift", shift)
     c = a >> shift
+    print("c", c)
     b = a ^ c
 
     return b
 
-def invert_left(a, shift, bitmask):
-    for i in range(2**32):
-        output = i ^ ((i << shift) & bitmask)
-        if output == a:
-            return i
+def invert_right(a, shift):
+    remaining = 32 - shift
+    b = (a >> remaining)
+    while remaining >= 0:
+        remaining -= shift 
+        if remaining < 0:
+            b = (a >> max(remaining, 0)) ^ (b >> abs(remaining))
+        else :
+            b = (a >> max(remaining, 0)) ^ b
+        print(b)
 
+    return b
+    
 
 def invert_left(a, shift, bitmask):
     b = a * (2**shift - 1)
@@ -34,13 +45,14 @@ def invert_output(output):
     y = invert_right(output, l)
     y = invert_left(y, t, c)
     y = invert_left(y, s, b)
+    print("first", y)
     y = invert_right(y, u) 
-
+    print("num", y, u)
     return y
 
 def total_mt_tap(seed):
     mt = MersenneTwister()
-    mt.seed_mt(12345)
+    mt.seed_mt(seed)
 
     return [mt.extract_number() for _ in range(624)]
 
@@ -49,10 +61,12 @@ def invert_mt_outputs(outputs):
     return MersenneTwister.from_state(inverted_outputs)
 
 if __name__=="__main__":
+    
     outputs = total_mt_tap(1234)
     copied_mt = invert_mt_outputs(outputs)
     for i in range(624):
-        assert copied_mt.extract_number() != outputs[i], "copied MT does not match original MT!"
+        tapped_num = copied_mt.extract_number() 
+        print(tapped_num, outputs[i])
+        assert tapped_num == outputs[i], "copied MT does not match original MT!"
 
     print("Copied MT matched Original MT")
-            
