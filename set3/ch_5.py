@@ -5,7 +5,6 @@ class MersenneTwister:
     r = 31
     a = int("9908B0DF", 16)
     u = 11
-    d = int("FFFFFFFF", 16)
     s = 7
     b = int("9D2C5680", 16)
     t = 15
@@ -33,7 +32,7 @@ class MersenneTwister:
                 raise Exception("Generator has not been seeded")
             self.twist()
         y = self.mt[self.index]
-        y = y ^ ((y >> self.u) & self.d)
+        y = y ^ (y >> self.u)
         y = y ^ ((y << self.s) & self.b)
         y = y ^ ((y << self.t) & self.c)
         y = y ^ (y >> self.l)
