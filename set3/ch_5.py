@@ -18,6 +18,14 @@ class MersenneTwister:
         self.lower_mask = (1 << self.r) - 1
         self.upper_mask = (~self.lower_mask) & ((2**self.w)-1) # TODO: check this gets lowest bits - correct endianess? bitwise?? 
 
+    @classmethod
+    def from_state(cls, state):
+        _mt = cls() 
+        _mt.mt = state
+        _mt.index = 0
+        return _mt 
+
+
     def seed_mt(self, seed):
         self.index = self.n
         self.mt[0] = seed

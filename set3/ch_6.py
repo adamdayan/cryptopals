@@ -2,11 +2,10 @@ import time
 import random 
 import math 
 
-from ch_5_v2 import MersenneTwister
+from ch_5 import MersenneTwister
 
 def random_waiter():
-    #wait_time = random.randint(40, 1000)
-    wait_time = random.randint(40, 500)
+    wait_time = random.randint(40, 1000)
     print("Sleeping for {} seconds".format(wait_time))
     time.sleep(wait_time)
 
@@ -35,7 +34,6 @@ def crack_mt_seed(output):
 
 if __name__=="__main__":
     output, seed = generate_random_mt_output()
-    print(seed)
     cracked_seed = crack_mt_seed(output)
 
     assert cracked_seed == seed, "Seeds do not match! Cracking failed."
