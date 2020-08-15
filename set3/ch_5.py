@@ -30,8 +30,6 @@ class MersenneTwister:
         self.index = self.n
         self.mt[0] = seed
         for i in range(1, self.n):
-            first_term = (self.f * (self.mt[i-1] ^ (self.mt[i-1] >> (self.w - 2))) + i)
-            second_term = 1 << self.w
             self.mt[i] = (self.f * (self.mt[i-1] ^ (self.mt[i-1] >> (self.w - 2))) + i) & ((2**self.w) - 1)
 
     def extract_number(self):
