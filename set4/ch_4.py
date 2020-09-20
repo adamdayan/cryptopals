@@ -12,7 +12,7 @@ def preprocess(message):
     padded_message = message + bytearray([128])
     diff_512 = (len(padded_message) - len(padded_message) % -64) - len(padded_message)
     if diff_512 < 8:
-        k = 64 - (diff_512 - 8) 
+        k = 64 - (8 - diff_512) 
     else:
         k = diff_512 - 8 
     padded_message = padded_message + bytearray([0] * k)
@@ -41,7 +41,6 @@ def compress(chunk, h0, h1, h2, h3, h4):
             )
         )
 
-    words_num = [int.from_bytes(w, byteorder="big") for w in words]
     a, b, c, d, e = h0, h1, h2, h3, h4
     for i in range(80):
         if i in range(0, 20):
@@ -81,10 +80,20 @@ def hash_sha1(message):
 if __name__=="__main__":
     message = "the quick brown fox jumps over the lazy dog".encode("ascii")
     hashed_message = hash_sha1(message)
-
     hash_verifier = hashlib.sha1()
     hash_verifier.update(message)
     verified_hashed_message = hash_verifier.digest()
     assert hashed_message == verified_hashed_message, "hashes do not match! SHA1 implementation incorrect. mine: {} verified: {}".format(hashed_message, verified_hashed_message)
     print("hashes match! SHA1 implementation correct")
+
+    key = "YELLOW SUBMARINE".encode("ascii")
+    hashed_authenticated_message = hash_sha1(key + message)
+    
+    tampered_message = "the Quick brown fox jumps over the lazy dog".encode("ascii")
+    hashed_tampered_message = hash_sha1(key + tampered_message)
+    
+    assert hashed_tampered_message != hashed_authenticated_message, "tampering has occured undetected! MAC has failed"
+    print(hashed_authenticated_message, hashed_tampered_message)
+
+
 
