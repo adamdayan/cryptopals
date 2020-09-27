@@ -8,7 +8,7 @@ H2 = 0x98BADCFE
 H3 = 0x10325476
 H4 = 0xC3D2E1F0
 
-def preprocess(message):
+def preprocess(message, extension_len=0):
     padded_message = message + bytearray([128])
     diff_512 = (len(padded_message) - len(padded_message) % -64) - len(padded_message)
     if diff_512 < 8:
@@ -16,7 +16,7 @@ def preprocess(message):
     else:
         k = diff_512 - 8 
     padded_message = padded_message + bytearray([0] * k)
-    orig_message_len = len(message) * 8
+    orig_message_len = (len(message) + extension_len)  * 8
     orig_message_len_64bit = bytearray(reversed([(orig_message_len >> i) & 255 for i in range(0, 64, 8)]))
     return padded_message + orig_message_len_64bit
 
@@ -67,15 +67,17 @@ def compress(chunk, h0, h1, h2, h3, h4):
     return (h0 + a) & (2**32 - 1), (h1 + b) & (2**32 - 1), (h2 + c) & (2**32 - 1), (h3 + d) & (2**32 - 1), (h4 + e) & (2**32 - 1)
 
  
-def hash_sha1(message):
-    padded_message = preprocess(message)
+def hash_sha1(message, is_extending=False, start_registers=None, extension_len=0):
+    padded_message = preprocess(message, extension_len)
     chunks = split_chunks(padded_message)
-    h0, h1, h2, h3, h4 = H0, H1, H2, H3, H4
+    if is_extending:
+        h0, h1, h2, h3, h4 = start_registers
+    else:
+        h0, h1, h2, h3, h4 = H0, H1, H2, H3, H4
     for chunk in chunks:
         h0, h1, h2, h3, h4 = compress(chunk, h0, h1, h2, h3, h4)
     hash_int = (h0 << 128) | (h1 << 96) | (h2 << 64) | (h3 << 32) | h4
     return hash_int.to_bytes(byteorder="big", length=20)
-
 
 if __name__=="__main__":
     message = "the quick brown fox jumps over the lazy dog".encode("ascii")
