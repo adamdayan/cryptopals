@@ -2,7 +2,7 @@ import hashlib
 import base64
 from set4.ch_4 import hash_sha1, preprocess
 
-def generate_padding(message_len):
+def generate_padding(message_len, little_byteorder = False):
     padding = bytearray([128])
     diff_512 = ( (message_len + 1)- (message_len + 1)%-64) - (message_len + 1)
     if diff_512 < 8:
@@ -11,7 +11,10 @@ def generate_padding(message_len):
         k = diff_512 - 8
     padding += bytearray([0]*k)
     orig_message_len = message_len * 8
-    orig_message_len_64bit = bytearray(reversed([(orig_message_len >> i) & 255 for i in range(0, 64, 8)]))
+    if little_byteorder:
+        orig_message_len_64bit = orig_message_len.to_bytes(byteorder="little", length=8)
+    else:
+        orig_message_len_64bit = orig_message_len.to_bytes(byteorder="big", length=8)
     return padding + orig_message_len_64bit
 
 def split_registers(message_digest):
@@ -45,7 +48,7 @@ if __name__=="__main__":
         if hash_sha1(key + forged_message) == forged_mac and check_admin(forged_message):
             print("Successfully forged MAC: {} {}".format(forged_message, base64.b64encode(forged_mac)))
             break
-        elif i == 16:
+        elif i == 511:
             print("Failed to forge MAC")
 
 

@@ -8,7 +8,7 @@ H2 = 0x98BADCFE
 H3 = 0x10325476
 H4 = 0xC3D2E1F0
 
-def preprocess(message, extension_len=0):
+def preprocess(message, extension_len=0, little_endian=False):
     padded_message = message + bytearray([128])
     diff_512 = (len(padded_message) - len(padded_message) % -64) - len(padded_message)
     if diff_512 < 8:
@@ -17,7 +17,10 @@ def preprocess(message, extension_len=0):
         k = diff_512 - 8 
     padded_message = padded_message + bytearray([0] * k)
     orig_message_len = (len(message) + extension_len)  * 8
-    orig_message_len_64bit = bytearray(reversed([(orig_message_len >> i) & 255 for i in range(0, 64, 8)]))
+    if little_endian:
+        orig_message_len_64bit = orig_message_len.to_bytes(byteorder="little", length=8)
+    else:
+        orig_message_len_64bit = bytearray(orig_message_len.to_bytes(byteorder="big", length=8))
     return padded_message + orig_message_len_64bit
 
 def split_chunks(padded_message):
