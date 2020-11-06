@@ -16,14 +16,17 @@ def generate_aes_key(session_key):
     return hasher.digest()[:16]
 
 class GoodPerson:
-    def __init__(self, p, g, name):
-        self.p = p
-        self.private_key = random.randint(0, self.p) % self.p
-        self.g = g
-        self.public_key = generate_public_key(p, g, self.private_key)
+    def __init__(self, name):
         self.name = name
 
+    def set_params(self, p, g):
+        self.p = p
+        self.g = g
+        self.private_key = random.randint(0, self.p) % self.p
+        self.public_key = generate_public_key(p, g, self.private_key)
+
     def initiate_handshake(self, partner):
+        partner.set_params(self.p, self.g)
         self.partner_public_key = partner.receive_handshake(self.public_key)
         self.session_key = generate_session_key(self.p, self.partner_public_key, self.private_key)
         self.aes_key = generate_aes_key(self.session_key)
@@ -40,8 +43,9 @@ class GoodPerson:
         iv = bytes([random.randint(0, 255) for _ in range(len(self.aes_key))])
         cipher = AES.new(self.aes_key, AES.MODE_CBC, iv)
         encrypted_message = cipher.encrypt(padded_message)
-        echoed_message = partner.echo_message(encrypted_message, iv)
-        decrypted_echoed_message = unpadder(cipher.decrypt(echoed_message))
+        echoed_message, partner_iv = partner.echo_message(encrypted_message, iv)
+        partner_cipher = AES.new(self.aes_key, AES.MODE_CBC, partner_iv)
+        decrypted_echoed_message = unpadder(partner_cipher.decrypt(echoed_message))
         assert decrypted_echoed_message == message, "sent and echoed message differ do not match! sent: {} echoed: {}".format(message, decrypted_echoed_message)
 
     def echo_message(self, encrypted_message, iv):
@@ -49,23 +53,28 @@ class GoodPerson:
         padded_message = cipher.decrypt(encrypted_message)
         message = unpadder(padded_message)
         print("{} received message: {}".format(self.name, message))
-        return cipher.encrypt(padder(message, len(self.aes_key)))
+        return_iv = bytes([random.randint(0, 255) for _ in range(len(self.aes_key))])
+        return_cipher = AES.new(self.aes_key, AES.MODE_CBC, return_iv)
+        return return_cipher.encrypt(padder(message, len(self.aes_key))), return_iv
 
 
 class BadPerson:
-    def __init__(self, p, g, name, origin, recipient):
-        self.p = p  
-        self.g = g
+    def __init__(self, name, origin, recipient):
         self.name = name
         self.origin = origin
         self.recipient = recipient 
     
+    def set_params(self, p, g):
+        self.p = p 
+        self.g = g
+
     def initiate_handshake(self, recipient):
+        recipient.set_params(self.p, self.g)
         self.recipient_public_key = recipient.receive_handshake(self.p)
 
     def receive_handshake(self, origin_public_key):
         self.origin_public_key = origin_public_key
-        self.recipient_public_key = self.initiate_handshake(self.recipient) 
+        self.initiate_handshake(self.recipient) 
         self.session_key = 0
         self.aes_key = generate_aes_key(self.session_key)
         return self.p
@@ -75,17 +84,22 @@ class BadPerson:
         padded_message = cipher.decrypt(encrypted_message)
         message = unpadder(padded_message)
         print("{} relayed message: {}".format(self.name, message))
-        recipient_message = self.recipient.echo_message(encrypted_message, iv)
-        decrypted_recipient_message = unpadder(cipher.decrypt(recipient_message))
+        recipient_message, recipient_iv = self.recipient.echo_message(encrypted_message, iv)
+        recipient_cipher = AES.new(self.aes_key, AES.MODE_CBC, recipient_iv)
+        decrypted_recipient_message = unpadder(recipient_cipher.decrypt(recipient_message))
         print("{} relayed message: {}".format(self.name, decrypted_recipient_message))
-        return recipient_message
+        return recipient_message, recipient_iv
 
 def safe_handshake(a, b, p, g, message):
+    print("Conducting normal Diffie-Hellman key exchange")
+    a.set_params(p, g)
     a.initiate_handshake(b)
     a.send_message(message, b)
 
 def mitm_handshake(a, b, p, g, message):
-    m = BadPerson(p, g, "Mary", a, b)
+    print("Man-in-the-middle altering public keys to p")
+    a.set_params(p, g)
+    m = BadPerson("Mary", a, b)
     a.initiate_handshake(m)
     a.send_message(message, m)
 
@@ -100,14 +114,13 @@ if __name__=="__main__":
     p = int.from_bytes(nist_p_bytearr, byteorder="big")
     g = 2
     
-    """
-    alice = GoodPerson(p, g, "Alice")
-    bob = GoodPerson(p, g, "Bob")
+    alice = GoodPerson("Alice")
+    bob = GoodPerson("Bob")
 
     safe_handshake(alice, bob, p, g, message)
-    """
-    adam = GoodPerson(p, g, "Adam")
-    brian = GoodPerson(p, g, "Brian")
+    
+    adam = GoodPerson("Adam")
+    brian = GoodPerson("Brian")
     message = "Hi Brian, I'm Adam. The eagle has landed!".encode("ascii")
 
     mitm_handshake(adam, brian, p, g, message)
