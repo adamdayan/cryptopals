@@ -2,6 +2,13 @@ import hashlib
 import math
 import random
 
+def get_num_byte_len(num):
+    if num == 0:
+        return 1
+    else:
+        return math.ceil(math.log2(num))
+
+
 class Server:
     def __init__(self):
         self.private_key = random.randint(0, 2**100)
@@ -18,7 +25,7 @@ class Server:
         hasher = hashlib.sha256()
         self.salt_bytes = self.salt.to_bytes(
             byteorder="big",
-            length=math.ceil(math.log2(self.salt))
+            length=get_num_byte_len(self.salt)
         )
         hasher.update(self.salt_bytes + password.encode("ascii"))
         xH = hasher.digest().hex()
@@ -38,11 +45,11 @@ class Server:
         hasher = hashlib.sha256()
         public_key_bytes = self.public_key.to_bytes(
             byteorder="big", 
-            length=math.ceil(math.log2(self.public_key))
+            length=get_num_byte_len(self.public_key)
         )
         client_public_key_bytes = self.client_public_key.to_bytes(
             byteorder="big", 
-            length=math.ceil(math.log2(self.client_public_key))
+            length=get_num_byte_len(self.client_public_key)
         )
         hasher.update(client_public_key_bytes + public_key_bytes)
         self.uH = hasher.digest().hex()
@@ -55,7 +62,7 @@ class Server:
         )
         s_bytes = self.s.to_bytes(
             byteorder="big", 
-            length=math.ceil(math.log2(self.s))
+            length=get_num_byte_len(self.s)
         )
         hasher = hashlib.sha256()
         hasher.update(s_bytes)
@@ -95,11 +102,11 @@ class Client:
         hasher = hashlib.sha256()
         public_key_bytes = self.public_key.to_bytes(
             byteorder="big", 
-            length=math.ceil(math.log2(self.public_key))
+            length=get_num_byte_len(self.public_key)
         )
         server_public_key_bytes = self.server_public_key.to_bytes(
             byteorder="big", 
-            length=math.ceil(math.log2(self.server_public_key))
+            length=get_num_byte_len(self.server_public_key)
         )
         hasher.update(public_key_bytes + server_public_key_bytes)
         uH = hasher.digest().hex()
@@ -107,7 +114,7 @@ class Client:
         hasher = hashlib.sha256()
         self.salt_bytes = self.salt.to_bytes(
             byteorder="big", 
-            length=math.ceil(math.log2(self.salt))
+            length=get_num_byte_len(self.salt)
         )
         hasher.update(self.salt_bytes + self.password.encode("ascii"))
         xH = hasher.digest().hex()
@@ -120,7 +127,7 @@ class Client:
         hasher = hashlib.sha256()
         s_bytes = self.s.to_bytes(
             byteorder="big", 
-            length=math.ceil(math.log2(self.s))
+            length=get_num_byte_len(self.s)
         )
         hasher.update(s_bytes)
         self.K = hasher.digest()
