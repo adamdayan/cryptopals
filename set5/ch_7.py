@@ -39,13 +39,16 @@ class RSACipher:
             self.q = number.getPrime(128)
             self.n = self.p * self.q
             self.et = (self.p - 1) * (self.q - 1)
-            self.e = 3
+            self.e = 3 # TODO: check if I should make this the big standard 65636 (?)
             if gcd(self.et, self.e) == 1:
                 congruent_1 = True
         self.d = invmod(self.e, self.et)
    
     def get_n(self):
         return self.n
+
+    def get_public_key(self):
+        return self.e, self.n
 
     def encrypt(self, target):
         return modexp(target, self.e, self.n)
